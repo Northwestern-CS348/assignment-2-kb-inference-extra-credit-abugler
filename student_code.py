@@ -130,6 +130,58 @@ class KnowledgeBase(object):
         # Implementation goes here
         # Not required for the extra credit assignment
 
+    def kb_explain_help(self, fact_or_rule, buf):
+        """
+        Recursive helper for kb_explain
+        :param fact_or_rule: fact or rule
+        :param buf: tab buffer
+        :return: string
+        """
+
+        if isinstance(fact_or_rule, Fact):
+            if fact_or_rule in self.facts:
+                for fact in self.facts:
+                    if fact_or_rule == fact:
+                        fact_or_rule = fact
+                        break
+                string = buf + "fact: {}".format(fact_or_rule.statement)
+                if fact_or_rule.asserted:
+                    string = string + " ASSERTED\n"
+                    return string
+                else:
+                    string = string + "\n"
+                    for lst in fact_or_rule.supported_by:
+                        string = string + buf + "  SUPPORTED BY\n"
+                        for fr in lst:
+                            string = string + self.kb_explain_help(fr, buf + "    ");
+                    return string
+            else:
+                return "Fact is not in the KB"
+        elif isinstance(fact_or_rule, Rule):
+            if fact_or_rule in self.rules:
+                for rule in self.rules:
+                    if fact_or_rule == rule:
+                        fact_or_rule = rule
+                        break
+                string = buf + "rule: ("
+                for state in fact_or_rule.lhs:
+                    string = string + state.__str__()
+                    if state != fact_or_rule.lhs[len(fact_or_rule.lhs)-1]:
+                        string = string + ", "
+                string = string + ") -> " + fact_or_rule.rhs.__str__()
+                if fact_or_rule.asserted:
+                    string = string + " ASSERTED\n"
+                    return string
+                else:
+                    string = string + "\n"
+                    for lst in fact_or_rule.supported_by:
+                        string = string + buf + "  SUPPORTED BY\n"
+                        for fr in lst:
+                            string = string + self.kb_explain_help(fr, buf + "    ")
+                    return string
+            else:
+                return "Rule is not in the Kb"
+
     def kb_explain(self, fact_or_rule):
         """
         Explain where the fact or rule comes from
@@ -142,7 +194,7 @@ class KnowledgeBase(object):
         """
         ####################################################
         # Student code goes here
-
+        return self.kb_explain_help(fact_or_rule, "")
 
 class InferenceEngine(object):
     def fc_infer(self, fact, rule, kb):
